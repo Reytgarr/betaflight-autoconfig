@@ -3,7 +3,6 @@ import datetime
 import os
 import git
 
-ports = serial.tools.list_ports.comports()
 repo_path = "f:/quad/!config"
 
 if not os.path.exists(repo_path):
@@ -11,9 +10,9 @@ if not os.path.exists(repo_path):
 
 repo = git.Repo(repo_path)
 origin = repo.remote(name='origin')
-origin.fetch()
+origin.pull()
 
-
+ports = serial.tools.list_ports.comports()
 for port, desc, hwid in sorted(ports):
     com_port = port
 
@@ -48,12 +47,28 @@ for line in response_str.split('\n'):
         version = line[version_start:version_end]
         break
 
-file_path = f"F:/quad/!config/{board_name}_{version}.txt"  
+file_path = f"{repo_path}/{board_name}_{version}.txt"  
+temp_path = f"{repo_path}/{board_name}_{version}_temp.txt"  
 
-with open(file_path, "w") as file:
+
+with open(temp_path, "w") as file:
     file.write(response_str)
 ser.close()
 
+if not os.path.exists(file_path):
+    with open(file_path, "w") as file:
+        file.write(response_str)
+        ser.close()
+else:
+    with open(file_path, 'r') as file1, open(temp_path, 'r') as file2:
+        if file1.read() == file2.read():
+            print("The files are the same")
+        else:
+            with open(file_path, "w") as file:
+                file.write(response_str)
+                ser.close()
+        
+os.remove(temp_path)
 repo = git.Repo(repo_path)
 repo.git.add(file_path)
 repo.index.commit("Added new config file")
