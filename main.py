@@ -7,21 +7,28 @@ from dotenv import load_dotenv
 import pystray
 from PIL import Image
 import threading
+from winotify import Notification
 
 load_dotenv()
-
+icon_path = "bf_icon.ico"
 repo_path = os.getenv("REPO_PATH")
 repo_url = os.getenv("REPO_URL")
 baud_rate = os.getenv("BAUD_RATE")
+notification = Notification(app_id="Betaflight Autoconfig", title="Betaflight Autoconfig")
 
 if not os.path.exists(repo_path):
     git.Repo.clone_from(repo_url, repo_path)
+
+
+def show_notification(message):
+    notification.msg = message
+    notification.show()
 
 def on_exit(icon, item):
     icon.stop()
 
 def create_tray_icon():
-    image = Image.open("bf_icon.ico")
+    image = Image.open(icon_path)
     menu = pystray.Menu(pystray.MenuItem("Exit", on_exit))
     icon = pystray.Icon("Betaflight Autoconfig", image, "Betaflight Autoconfig", menu)
     return icon
@@ -76,10 +83,11 @@ def port_monitor():
             else:
                 with open(file_path, 'r') as file1, open(temp_path, 'r') as file2:
                     if file1.read() == file2.read():
-                        print("The files are the same")
+                        show_notification("The configuration is the same, it has not been updated.")
                     else:
                         with open(file_path, "w") as file:
                             file.write(response_str)
+                            show_notification("The configuration has been updated.")
 
             os.remove(temp_path)
             repo = git.Repo(repo_path)
