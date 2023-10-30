@@ -4,3 +4,6 @@ Hey, betaflight-autoconfig is temporary name for my addon. Main usage is control
 
 ## IMPORTANT
 Change .env file to work properly
+
+## No notifications?
+Make sure notifications are enabled in windows.
